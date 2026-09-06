@@ -228,6 +228,7 @@ TS 38.306 §4.1.2 gives **60.99 Mbps** for this configuration
 |---|---|---|---|---|
 | gemma4:31b | Ollama | Q4_K_M | 0.925 | 60.94 |
 | qwen3.8:27b-mlx | Ollama | nvfp4 | 476/1024 | 32.81 |
+| qwen3.8:27b-mlx (rerun) | Ollama | nvfp4 | 848/1024 | 545.59 |
 | OTel-2.0-31B-IT | MLX | 4-bit, 4.501 bpw | absent | 65.88 |
 | OTel-2.0-31B-IT (reworded) | MLX | 4-bit, 4.501 bpw | 0.85 | 14.00 |
 
@@ -241,11 +242,21 @@ ollama run gemma4:31b
 >>> /set parameter seed 0
 ```
 
-Arithmetic was correct in every run. What differed was Rmax — the target code rate
-R/1024 from TS 38.214 Table 5.1.3.1-1, which is 948/1024 at MCS 28. Qwen3 cited that
-table by name and then used 476/1024.
+The arithmetic was correct in every run. What differed was Rmax — the target code rate
+R/1024 from TS 38.214 Table 5.1.3.1-1, which is 948/1024 at MCS 28. Neither 476 nor 848
+appears in any of the PDSCH MCS tables; 848 does appear in the spec, but in Table
+5.1.3.2-1 as a transport block size, not a code rate.
 
 Single question, so this is not a ranking.
+
+### Full-precision check
+
+I also ran the same question against the unquantized model through a hosted provider
+(Featherless). Rmax was missing or wrong there too, so this does not look like a
+quantization artifact.
+
+That endpoint is not deterministic at `temperature=0` — repeated identical calls returned
+materially different answers — so I ran it several times rather than relying on one.
 
 ---
 
@@ -256,3 +267,7 @@ Single question, so this is not a ranking.
 - Benchmark data — https://huggingface.co/datasets/GSMA/ot-lite
 - Remote conversion fallback — https://huggingface.co/spaces/mlx-community/mlx-my-repo
 - TS 38.214 (MCS tables) — https://www.3gpp.org/ftp/Specs/archive/38_series/38.214/
+
+---
+
+*Last updated: 2026-09-06 15:30*

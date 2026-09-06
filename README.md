@@ -1,4 +1,4 @@
-# OTel 2.0 31B — Local MLX Setup
+# OTel 2.0 31B on Apple Silicon — setup notes and a 3-model comparison
 
 What I ran to get the GSMA Open Telco leaderboard model working offline on Apple silicon.
 
@@ -210,6 +210,38 @@ mlx_lm.chat --model ~/telco-eval/otel-31b-q4
 The HF login persists in `~/.cache/huggingface`, not the venv.
 
 ---
+
+---
+
+## Three-model comparison
+
+Same question to three locally-run models:
+
+> The configuration is 4x4 MIMO, 28 MCS, 64 QAM, 0.14 overhead,
+> 15 kHz numerology, and 19 RBs. Calculate the supported max data
+> rate based on 3GPP TS 38.306.
+
+TS 38.306 §4.1.2 gives **60.99 Mbps** for this configuration
+(v=4, Qm=6, f=1, Rmax=948/1024, N_PRB×12=228, Ts=71.43 µs, 1−OH=0.86).
+
+| Model | Runtime | Quantization | Rmax used | Result |
+|---|---|---|---|---|
+| gemma4:31b | Ollama | Q4_K_M | 0.925 | 60.94 |
+| qwen3.8:27b-mlx | Ollama | nvfp4 | 476/1024 | 32.81 |
+| OTel-2.0-31B-IT | MLX | 4-bit, 4.501 bpw | absent | 65.88 |
+| OTel-2.0-31B-IT (reworded) | MLX | 4-bit, 4.501 bpw | 0.85 | 14.00 |
+
+All runs at temperature 0. Different runtimes and quantizations, so
+this is a first check rather than a controlled comparison. Both Ollama
+models list a `thinking` capability; I did not control for whether it
+was active.
+
+Arithmetic was correct in every run. What differed was Rmax — the
+target code rate R/1024 from TS 38.214 Table 5.1.3.1-1, which is
+948/1024 at MCS 28. Qwen3 cited that table by name and then used
+476/1024.
+
+Single question, so this is not a ranking.
 
 ## Links
 

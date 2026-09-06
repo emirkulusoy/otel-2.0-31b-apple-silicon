@@ -1,6 +1,8 @@
 # OTel 2.0 31B on Apple Silicon — setup notes and a 3-model comparison
 
 What I ran to get the GSMA Open Telco leaderboard model working offline on Apple silicon.
+It also includes a three-model comparison on a 5G throughput calculation that has a
+spec-defined answer.
 
 This is a record of one working path, **not a recommended one**. Versions and choices below
 are what happened to work on this machine. If you know a better way, or a version that
@@ -211,8 +213,6 @@ The HF login persists in `~/.cache/huggingface`, not the venv.
 
 ---
 
----
-
 ## Three-model comparison
 
 Same question to three locally-run models:
@@ -231,17 +231,23 @@ TS 38.306 §4.1.2 gives **60.99 Mbps** for this configuration
 | OTel-2.0-31B-IT | MLX | 4-bit, 4.501 bpw | absent | 65.88 |
 | OTel-2.0-31B-IT (reworded) | MLX | 4-bit, 4.501 bpw | 0.85 | 14.00 |
 
-All runs at temperature 0. Different runtimes and quantizations, so
-this is a first check rather than a controlled comparison. Both Ollama
-models list a `thinking` capability; I did not control for whether it
-was active.
+Different runtimes and quantizations, so this is a first check rather than a controlled
+comparison. Both Ollama models default to `temperature 1` and list a `thinking`
+capability; set temperature explicitly before comparing:
 
-Arithmetic was correct in every run. What differed was Rmax — the
-target code rate R/1024 from TS 38.214 Table 5.1.3.1-1, which is
-948/1024 at MCS 28. Qwen3 cited that table by name and then used
-476/1024.
+```
+ollama run gemma4:31b
+>>> /set parameter temperature 0
+>>> /set parameter seed 0
+```
+
+Arithmetic was correct in every run. What differed was Rmax — the target code rate
+R/1024 from TS 38.214 Table 5.1.3.1-1, which is 948/1024 at MCS 28. Qwen3 cited that
+table by name and then used 476/1024.
 
 Single question, so this is not a ranking.
+
+---
 
 ## Links
 
@@ -249,3 +255,4 @@ Single question, so this is not a ranking.
 - Leaderboard — https://huggingface.co/spaces/GSMA/open-telco-leaderboard
 - Benchmark data — https://huggingface.co/datasets/GSMA/ot-lite
 - Remote conversion fallback — https://huggingface.co/spaces/mlx-community/mlx-my-repo
+- TS 38.214 (MCS tables) — https://www.3gpp.org/ftp/Specs/archive/38_series/38.214/
